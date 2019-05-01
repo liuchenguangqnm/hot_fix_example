@@ -1,0 +1,139 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 27
+    buildToolsVersion '27.0.3'
+    defaultConfig {
+        applicationId "com.example.hotfix"
+        minSdkVersion 15
+        targetSdkVersion 27
+        versionCode 1
+        versionName "1.0.0"
+        flavorDimensions "versionCode"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+        // 方法数超出相关配置
+        multiDexEnabled true
+
+        // 使用support.v8.renderscript高斯模糊兼容至安卓2.3版本
+        renderscriptTargetApi 18
+        renderscriptSupportModeEnabled true
+    }
+
+    buildTypes {
+        debug {
+            // 基本混淆
+            minifyEnabled false
+            // 移除无用的资源文件
+            shrinkResources false
+            // Zipalign优化
+            zipAlignEnabled false
+            // debuggable false
+            // jniDebuggable false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+
+        release {
+            // 基本混淆
+            minifyEnabled false
+            // 移除无用的资源文件
+            shrinkResources false
+            // Zipalign优化
+            zipAlignEnabled false
+            // debuggable false
+            // jniDebuggable false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    // 混淆和方法数超出相关配置
+    dexOptions {
+        javaMaxHeapSize "4g"
+        preDexLibraries = false
+    }
+
+    // 无论debug和relase都用一个jks签名，保证高德地图只会用一个正确的shar1值
+    signingConfigs {
+        release {
+            storeFile file("test.jks")
+            storePassword "123456"
+            keyAlias "test"
+            keyPassword "123456"
+        }
+
+        debug {
+            storeFile file('test.jks')
+            storePassword "123456"
+            keyAlias "test"
+            keyPassword "123456"
+        }
+    }
+
+    productFlavors {
+        channel1 {
+            manifestPlaceholders = [CHANNEL_NAME: "test-android"]
+        }
+    }
+
+    // 设置aar文件路径
+    repositories {
+        flatDir {
+            dirs 'libs'
+        }
+    }
+
+    // 设置Jni so文件路径
+    sourceSets {
+        main {
+            jniLibs.srcDirs = ['libs']
+        }
+    }
+
+    // 第三方so库禁止混淆
+    packagingOptions {
+        doNotStrip "*/aarmeabi-v7a/*.so"
+        doNotStrip "*/arm64-v8a/*.so"
+    }
+
+    // lambda指定等级
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+
+    // 使用api方式来依赖项目或者库的话,那么这个库,在编译时期和运行时期都可以对其他module可见
+    api fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'com.android.support:appcompat-v7:27.1.1'
+    implementation 'com.android.support:support-v4:27.1.1'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+
+    // RxJava + Retrofit完成网络请求依赖。前四个分别是RxJava、RxAndroid、Retrofit以及Gson的库，
+    // 最后那个才是新加入的，RxJava + Retrofit的使用需要用到最后那个包。
+    // 注意：最后三个包的版本号必须一样，这里用的是2.0.2。
+    implementation 'io.reactivex:rxjava:1.2.2'
+    implementation 'io.reactivex:rxandroid:1.2.1'
+    implementation 'com.squareup.retrofit2:retrofit:2.0.2'
+    implementation 'com.squareup.retrofit2:converter-gson:2.0.2'
+    implementation 'com.squareup.retrofit2:adapter-rxjava:2.0.2'
+    // okhttp的拦截器
+    implementation 'com.squareup.okhttp3:logging-interceptor:3.4.1'
+    // 分包相关
+    implementation 'com.android.support:multidex:1.0.3'
+    // glide
+    implementation 'com.github.bumptech.glide:glide:3.7.0'
+    // rxJava
+    implementation 'io.reactivex:rxandroid:1.2.1'
+    implementation 'io.reactivex:rxjava:1.2.2'
+    // ConstraintLayout约束布局
+    implementation 'com.android.support.constraint:constraint-layout:1.1.3'
+    // 与后台交互所需的Rsa加密界面用到的Apache Commons Codec包
+    implementation files('libs/commons-codec-1.10.jar')
+    // 安卓com.alibaba.fastjson.JSON的应用
+    implementation files('libs/fastjson-1.2.7.jar')
+    implementation project(':recyleAdapter')
+}
